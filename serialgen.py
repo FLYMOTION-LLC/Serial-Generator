@@ -121,7 +121,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def SN_gen(PN, ver):
     FM = "414"
-    prod = PN[1:-1]
+    product_number = PN[1:-1]
+    #print(product_number)
+
 
     month = datetime.now().month
     now = datetime.now()
@@ -136,7 +138,7 @@ def SN_gen(PN, ver):
     }[quarter]
 
 
-    if prod == FM:
+    if product_number == FM:
         with open("products.json", "r") as f:
             data = json.load(f)
             used_numbers = data.get(year, {}).get(quarter_code, [])
@@ -148,7 +150,9 @@ def SN_gen(PN, ver):
                 break
         # number is now a valid UUID
         generated = make_serial(PN, ver, quarter_code, number)
-
+    else:
+        generated = None
+        raise ValueError(f"Invalid Flymotion numbers: {product_number}")
     return generated
 
 def add_number(data, year, quarter_code, number):
@@ -173,13 +177,13 @@ if __name__ == "__main__":
     parser.add_argument(
                         "--pn",
                         type=str,
-                        help="Part number"
+                        help="Part number, PN"
                         )
 
     parser.add_argument(
                         "--version",
                         type=str,
-                        help="Part version"
+                        help="Part version, V"
                         )
 
     args = parser.parse_args()
@@ -189,9 +193,13 @@ if __name__ == "__main__":
 
     if args.u:
         if pn is None:
+            print("Part number is required in unit-test mode.\n")
+            print("Please input a valid part number of format: \"x414x\".\n")
             pn = input("Enter PN: ").strip()
 
         if version is None:
+            print("Version is required in unit-test mode.\n")
+            print("Please input a valid Version number of format: \"x\".\n")
             version = input("Enter version: ").strip()
 
         serial_number = SN_gen(pn, version)
